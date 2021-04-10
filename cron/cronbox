@@ -1,0 +1,25 @@
+#
+# @(#)Auteur		: PVaissiere
+# @(#)Nom		: cronbox
+# @(#)Date		: 2021/04/01
+# @(#)Version		: 0.4.3
+#
+# Edit this file to introduce tasks to be run by cron.
+#
+# To define the time you can provide concrete values for
+# minute (m), hour (h), day of month (dom), month (mon),
+# and day of week (dow) or use '*' in these fields (for 'any').
+#
+# For more information see the manual pages of crontab(5) and cron(8)
+#
+#SHELL définie le shell par défault
+SHELL=/bin/bash
+# BASH_ENV définition des variables d'environnement utile pour les scripts exepté les variables read-only
+# declare -p | grep -Ev 'BASHOPTS|BASH_VERSINFO|EUID|PPID|SHELLOPTS|UID' > /container.env
+# ou
+# declare -p | grep -vP '\s-+.{0,1}r+.*\s' > /container.env
+BASH_ENV=/container.env
+#
+# m	h	dom	mon	dow	command
+*/30	*	*	*	*	/usr/bin/pwsh -File $CRONSCRIPTS/cron-hourly.ps1
+55	23	*	*	*	/usr/bin/pwsh -File $CRONSCRIPTS/cron-daily.ps1
