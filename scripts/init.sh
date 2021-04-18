@@ -3,8 +3,8 @@
 # @(#)Shell		: /bin/bash
 # @(#)Auteur		: PVaissiere
 # @(#)Nom		: init.sh
-# @(#)Date		: 2021/04/05
-# @(#)Version		: 0.4.6
+# @(#)Date		: 2021/04/18
+# @(#)Version		: 0.5.4
 # @(#)
 # @(#)Resume		: Script d'initialisation du pod
 # @(#)--------------------------------------------------------------------------
