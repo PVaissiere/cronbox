@@ -4,7 +4,7 @@
 # @(#)Auteur		: PVaissiere
 # @(#)Nom		: CronBox-Ftp.psm1
 # @(#)Date		: 2021/04/18
-# @(#)Version		: 0.5.5
+# @(#)Version		: 0.5.6
 # @(#)
 # @(#)Resume		: Module des functions Ftp
 # @(#)
@@ -551,7 +551,7 @@ Supprime les répertoires vides.
 	If ( $RemoveDirs ) {
 		$Command = $RemoveDirs | ForEach-Object {
 			Write-Log -Value ($Script:MsgModuleFtp.NfoOptDistRm -f $_.FullName)
-			$TmpPath = $Path -replace "'", "\'"
+			$TmpPath = $_.FullName -replace "'", "\'"
 			"rmdir '$TmpPath'"
 		}
 		Try {
