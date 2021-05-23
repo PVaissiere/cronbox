@@ -3,8 +3,8 @@
 # @(#)Shell		: /usr/bin/pwsh
 # @(#)Auteur		: PVaissiere
 # @(#)Nom		: CronBox-Ftp.psm1
-# @(#)Date		: 2021/04/10
-# @(#)Version		: 0.5.2
+# @(#)Date		: 2021/04/18
+# @(#)Version		: 0.5.6
 # @(#)
 # @(#)Resume		: Module des functions Ftp
 # @(#)
@@ -252,7 +252,13 @@ Chemin ftp a cataloguer.
 
 	Try {
 		# --- Traitement et récupération via LFtp
-		[Object[]]$Out = Start-FtpCommands -Command ( ($Path) ? "ls '$Path'" : "ls" ) -Retour
+		If ( $Path ) {
+			$TmpPath = $Path -replace "'", "\'"
+			$Command = "ls '$TmpPath'"
+		} Else {
+			$Command = 'ls'
+		}
+		[Object[]]$Out = Start-FtpCommands -Command $Command -Retour
 	}
 	Catch {
 		Throw ( ( ( $_.ScriptStackTrace -split '\r?\n' )[0] -replace '\<ScriptBlock\>\,\s','' ) + '£' + $_.Exception.Message )
@@ -545,7 +551,8 @@ Supprime les répertoires vides.
 	If ( $RemoveDirs ) {
 		$Command = $RemoveDirs | ForEach-Object {
 			Write-Log -Value ($Script:MsgModuleFtp.NfoOptDistRm -f $_.FullName)
-			"rmdir '$($_.FullName)'"
+			$TmpPath = $_.FullName -replace "'", "\'"
+			"rmdir '$TmpPath'"
 		}
 		Try {
 			Start-FtpCommands -Command $Command
