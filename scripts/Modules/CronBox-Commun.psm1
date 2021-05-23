@@ -21,6 +21,7 @@
 # @(#)			Remove-OldFiles
 # @(#)			Set-PermissionsValues
 # @(#)			Set-RetentionValue
+# @(#)			Set-TexteToRegex
 # @(#)--------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
@@ -60,7 +61,13 @@ Permet d'établir une nouvelle valeur d'un filtre
 qui va permettre de définir quel fichiers supprimer.
 
 .PARAMETER Regex
-Paramètre pour la définition Regex de la variable.
+Paramètre pour la définition au format Regex de la variable.
+
+.PARAMETER Texte
+Paramètre pour la définition au format Texte de la variable.
+
+.PARAMETER FullName
+Uniquement avec Texte, défini .
 
 .INPUTS
 La valeur ne peut pas être passé par le pipeline.
@@ -68,20 +75,50 @@ La valeur ne peut pas être passé par le pipeline.
 .EXAMPLE
 PS>Add-FiltreRemoveValues -Regex '^RARBG.*txt$'
 
+.EXAMPLE
+PS>Add-FiltreRemoveValues -Texte 'Torrent9.html' -FullName
+
+.EXAMPLE
+PS>Add-FiltreRemoveValues -Texte 'nomdefichierpartiel'
+
 .LINK
 https://docs.microsoft.com/fr-fr/powershell/module/microsoft.powershell.core/about/about_regular_expressions
 https://regex101.com/
+
+.NOTES
+Attention, les filtres Regex sont sensibles aux majuscules et minuscules
 #>
 	[CmdletBinding()]
 	Param (
 	[Parameter(Mandatory=$true,
-	ValueFromPipeline=$false)]
-		[String]$Regex
+	ValueFromPipeline=$false,
+	ParameterSetName="WithRegex")]
+		[String]$Regex,
+	[parameter(Mandatory=$true,
+	ValueFromPipeline=$false,
+	ParameterSetName="WithTexte")]
+		[String]$Texte,
+	[Parameter(Mandatory=$false,
+	ValueFromPipeline=$false,
+	ParameterSetName="WithTexte")]
+		[Switch]$FullName = $false
 	)
 
-	$Object = New-Object PSObject
-	$Object | Add-Member -MemberType 'NoteProperty' -Name 'Regex' -Value $Regex
-	$Script:FiltreRemove += $Object
+	If ( $Texte ) {
+		If ( $FullName ) {
+			$Regex += '^'
+		}
+		$Regex = Set-TexteToRegex -Texte $Texte
+		If ( $FullName ) {
+			$Regex += '$'
+		}
+	}
+
+	If ($Script:FiltreRemove2.Regex -notcontains $Regex) {
+		$Object = New-Object PSObject
+		$Object | Add-Member -MemberType 'NoteProperty' -Name 'Regex' -Value $Regex
+		$Script:FiltreRemove += $Object
+	}
 }
 
 Function Add-FiltreRenameValues {
@@ -562,4 +599,44 @@ PS>Set-RetentionValue -Value 7
 			[String]$Value
 	)
 	Set-Variable -Scope 'Script' -Name 'Retention' -Value $Value
+}
+
+Function Set-TexteToRegex {
+<#
+.SYNOPSIS
+Transfome une chaine texte au format Regex.
+
+.DESCRIPTION
+Permet d'établir la variable Retention qui définie
+le nombre de jours de journaux a garder.
+
+.PARAMETER Texte
+Valeur pour la définition de la variable Retention
+
+.INPUTS
+La valeur ne peux pas être passé par le pipeline.
+
+.EXAMPLE
+PS>Set-RetentionValue -Value "01-Mon.test9-de_8-fonction.txt"
+01\-Mon\.test9\-de\_8\-fonction\.txt
+#>
+	[CmdletBinding()]
+	Param (
+	[parameter(Mandatory=$true,
+	ValueFromPipeline=$false)]
+		[String]$Texte
+	)
+	[String]$Regex = ''
+	[Char[]]$Texte | ForEach-Object {
+		If ($_ -match '\d|\w') {
+			$Regex += $_
+		} ElseIf ($_ -match '\s') {
+			$Regex += '\s'
+		} ElseIf ($_ -eq '*') {
+			$Regex += '.*'
+		} Else {
+			$Regex += "\$_"
+		}
+	}
+	Return $Regex
 }
