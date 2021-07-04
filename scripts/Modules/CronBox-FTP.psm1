@@ -25,6 +25,7 @@
 # @(#)			Set-FtpTypeValue
 # @(#)			Set-FtpUrlValue
 # @(#)			Set-FtpUserValue
+# @(#)			Set-OptimiseAfterSync
 # @(#)			Start-FtpCommands
 # @(#)			Sync-FtpToLocal
 # @(#)			Test-FtpPath
@@ -78,6 +79,7 @@ New-Variable -Scope 'Script' -Force -Visibility Private -Name 'MsgModuleFtp' -Va
 	'WrgAssertLibDistant' =	'=== [WARNING] Le répertoire Distant {0} non trouvé'
 	'WrgAssertLibLocal' =	'=== [WARNING] Le répertoire local {0} non trouvé'
 } ) -Description 'Variable des messages'
+New-Variable -Scope 'Script' -Force -Visibility Private -Name 'OptimiseAfterSync' -Value ( [Bool]$false ) -Description 'Chemin vers le fichier de configuration des libraries'
 New-Variable -Scope 'Script' -Force -Visibility Private -Name 'PathBetween' -Value ( [String]'' ) -Description 'Chemin vers le fichier de configuration des libraries'
 New-Variable -Scope 'Script' -Force -Visibility Private -Name 'PathLibraries' -Value $env:CRONLIBRARIES -Description 'Chemin du répertoire des libraries'
 New-Variable -Scope 'Script' -Force -Visibility Private -Name 'PathLibrariesConf' -Value ( [String]'' ) -Description 'Chemin vers le fichier de configuration des libraries'
@@ -775,6 +777,33 @@ PS>Set-FtpUserValue -Value "MonCompte"
 	Set-Variable -Scope 'Script' -Name 'FtpUser' -Value $Value
 }
 
+Function Set-OptimiseAfterSync {
+<#
+.SYNOPSIS
+Définie l'activation d'optimisation après le sync.
+
+.DESCRIPTION
+Permet d'établir la variable OptimiseAfterSync qui
+valide l'optimisation après la synchronisation.
+
+.PARAMETER Value
+Valeur pour la définition de la variable OptimiseAfterSync
+
+.INPUTS
+La valeur ne peux pas être passé par le pipeline
+
+.EXAMPLE
+PS>Set-OptimiseAfterSync -Value $true
+#>
+[CmdletBinding()]
+Param (
+	[Parameter(Mandatory=$false,
+	ValueFromPipeline=$false)]
+		[Bool]$Value
+)
+Set-Variable -Scope 'Script' -Name 'OptimiseAfterSync' -Value $Value
+}
+
 Function Start-FtpCommands {
 <#
 .SYNOPSIS
@@ -914,11 +943,15 @@ Scénario des différents traitements pour la récupération du contenu des libr
 					$Command = $Command -replace $SubSearch, $Myvar
 				}
 				Start-FtpCommands -Command $Command -Stream
-				Optimize-Directories -Path $To
+				If ( $Script:OptimiseAfterSync ) {
+					Optimize-Directories -Path $To
+				}
 			}
 		} Else {
 			Write-Log -Value $Script:MsgModuleFtp.NfoFtpToLocal2
-			Optimize-Directories -Path $Script:PathBetween -Purge
+			If ( $Script:OptimiseAfterSync ) {
+				Optimize-Directories -Path $Script:PathBetween -Purge
+			}
 		}
 	}
 	Catch {
