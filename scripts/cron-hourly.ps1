@@ -11,19 +11,16 @@
 # @(#)Description	: Gère les fonctions pour vérifier s'il y a de nouveaux fichiers et synchroniser avec le serveur local
 # @(#)--------------------------------------------------------------------------
 
+# ------------------------------------------------------------------------------
+# --- Importation des fonctions et des variables
+# ------------------------------------------------------------------------------
 Try {
 	# ------------------------------------------------------------------------------
 	# --- Importation des fonctions et des variables
 	# ------------------------------------------------------------------------------
-	$Liste = Get-ChildItem -Path $PSScriptRoot -Directory -Recurse | ForEach-Object {
-		Get-ChildItem -Path $_.FullName -File -Filter "*.ps*1"
-	}
-	$Liste | Where-Object { $_.Name -match "\.psm1" } | ForEach-Object {
-		Import-Module $_.FullName -Force
-	}
-	$Liste | Where-Object { $_.Name -match "\.ps1" } | ForEach-Object {
-		Import-Module $_.FullName -Force
-	}
+	$Liste = Get-ChildItem -Path $PSScriptRoot -Recurse | Where-Object { $_.DirectoryName -ne $PSScriptRoot } | Sort-Object -Property Name | Select-Object -ExpandProperty FullName
+	$Liste | Where-Object { $_ -match "\.psm1$" } | ForEach-Object { Import-Module $_ -Force -ErrorAction Stop }
+	$Liste | Where-Object { $_ -match "\.ps1$" } | ForEach-Object { Import-Module $_ -Force -ErrorAction Stop }
 
 	# ------------------------------------------------------------------------------
 	# --- Variables complémentaire du journal
